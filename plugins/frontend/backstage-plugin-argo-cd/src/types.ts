@@ -11,24 +11,27 @@ export const argoCDAppDetails = t.type({
       t.undefined,
     ]),
   }),
-  status: t.type({
-    sync: t.type({
-      status: t.string,
+  status: t.union([
+    t.type({
+      sync: t.type({
+        status: t.string,
+      }),
+      health: t.type({
+        status: t.string,
+      }),
+      operationState: t.type({
+        startedAt: t.string,
+        finishedAt: t.union([t.string, t.undefined]),
+      }),
+      history: t.union([t.array(t.type({
+        id: t.union([t.number, t.undefined]),
+        revision: t.union([t.string, t.undefined]),
+        deployStartedAt: t.union([t.string, t.undefined]),
+        deployedAt: t.union([t.string, t.undefined]),
+      })), t.undefined]),
     }),
-    health: t.type({
-      status: t.string,
-    }),
-    operationState: t.type({
-      startedAt: t.string,
-      finishedAt: t.union([t.string, t.undefined]),
-    }),
-    history: t.union([t.array(t.type({
-      id: t.union([t.number, t.undefined]),
-      revision: t.union([t.string, t.undefined]),
-      deployStartedAt: t.union([t.string, t.undefined]),
-      deployedAt: t.union([t.string, t.undefined]),
-    })), t.undefined]),
-  }),
+    t.undefined
+  ])
 });
 
 export type ArgoCDAppDetails = t.TypeOf<typeof argoCDAppDetails>;

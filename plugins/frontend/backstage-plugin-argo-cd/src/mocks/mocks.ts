@@ -358,7 +358,8 @@ export const getResponseStubScanning = {
 
 export const getEmptyResponseStub = {
   metadata: {
-    resourceVersion: '7277391'
+    resourceVersion: '7277391',
+    name: 'string',
   },
   items: null
 };
