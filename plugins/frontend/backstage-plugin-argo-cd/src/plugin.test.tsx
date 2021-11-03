@@ -35,7 +35,6 @@ import {
   getResponseStub,
   getResponseStubScanning,
   getResponseStubMissingData,
-  getEntityStubWithAppSelector,
   getEmptyResponseStub,
   getIdentityApiStub,
 } from './mocks/mocks';
