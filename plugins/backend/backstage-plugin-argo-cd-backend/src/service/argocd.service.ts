@@ -24,9 +24,8 @@ import {
   UpdateArgoProjectAndAppProps,
   UpdateArgoApplicationProps,
   UpdateArgoProjectProps,
-  getArgoProjectProps,
+  GetArgoProjectProps,
   GetArgoProjectResp,
-  // UpdateArgoApplicationProps,
 } from './types';
 
 export class ArgoService implements ArgoServiceApi {
@@ -147,6 +146,35 @@ export class ArgoService implements ArgoServiceApi {
       }),
     ).catch();
     return resp.flatMap(f => (f ? [f] : []));
+  }
+
+  async getArgoProject({
+    baseUrl,
+    argoToken,
+    projectName,
+  }: GetArgoProjectProps): Promise<GetArgoProjectResp> {
+    const requestOptions: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${argoToken}`,
+      },
+    };
+
+    const resp = await fetch(
+      `${baseUrl}/api/v1/projects/${projectName}`,
+      requestOptions,
+    );
+    const data = await resp.json();
+
+    if (resp.status !== 200) {
+      this.logger.error(
+        `Failed to get argo project ${projectName}: ${data.message}`,
+      );
+      throw new Error(`Failed to get argo project: ${data.message}`);
+    }
+
+    return data;
   }
 
   async getArgoToken(appConfig: {
@@ -522,7 +550,9 @@ export class ArgoService implements ArgoServiceApi {
     );
     const respData = await resp.json();
     if (resp.status !== 200) {
-      this.logger.error(`Error updating argo app ${appName}: ${respData}`);
+      this.logger.error(
+        `Error updating argo app ${appName}: ${respData.message}`,
+      );
       throw new Error(`Error updating argo app: ${respData.message}`);
     }
 
@@ -787,16 +817,24 @@ export class ArgoService implements ArgoServiceApi {
       argoToken,
     );
     if (!appData.spec?.source?.repoURL) {
-      this.logger.error(`No repo URL found for argo project ${projectName}`);
-      throw new Error('No repo URL found for argo project');
+      this.logger.error(`No repo URL found for argo app ${projectName}`);
+      throw new Error('No repo URL found for argo app');
     }
     if (!appData.metadata?.resourceVersion) {
+      this.logger.error(`No resourceVersion found for argo app ${projectName}`);
+      throw new Error('No resourceVersion found for argo app');
+    }
+    const projData = await this.getArgoProject({
+      baseUrl: instanceConfig.url,
+      argoToken,
+      projectName,
+    });
+    if (!projData.metadata?.resourceVersion) {
       this.logger.error(
         `No resourceVersion found for argo project ${projectName}`,
       );
       throw new Error('No resourceVersion found for argo project');
     }
-    const { resourceVersion } = appData.metadata;
     if (appData.spec?.source?.repoURL === sourceRepo) {
       await this.updateArgoProject({
         argoToken,
@@ -804,7 +842,7 @@ export class ArgoService implements ArgoServiceApi {
         namespace,
         projectName,
         sourceRepo,
-        resourceVersion,
+        resourceVersion: projData.metadata.resourceVersion,
         destinationServer,
       });
       await this.updateArgoApp({
@@ -816,7 +854,7 @@ export class ArgoService implements ArgoServiceApi {
         projectName,
         sourcePath,
         sourceRepo,
-        resourceVersion,
+        resourceVersion: appData.metadata.resourceVersion,
         destinationServer,
       });
       return true;
@@ -827,7 +865,7 @@ export class ArgoService implements ArgoServiceApi {
       namespace,
       projectName,
       sourceRepo: [sourceRepo, appData.spec.source.repoURL],
-      resourceVersion,
+      resourceVersion: projData.metadata.resourceVersion,
       destinationServer,
     });
     await this.updateArgoApp({
@@ -839,8 +877,13 @@ export class ArgoService implements ArgoServiceApi {
       projectName,
       sourcePath,
       sourceRepo,
-      resourceVersion,
+      resourceVersion: appData.metadata.resourceVersion,
       destinationServer,
+    });
+    const updatedProjData = await this.getArgoProject({
+      baseUrl: instanceConfig.url,
+      argoToken,
+      projectName,
     });
     await this.updateArgoProject({
       argoToken,
@@ -848,36 +891,10 @@ export class ArgoService implements ArgoServiceApi {
       namespace,
       projectName,
       sourceRepo,
-      resourceVersion,
+      resourceVersion: updatedProjData.metadata.resourceVersion,
       destinationServer,
     });
 
     return true;
-  }
-
-  async getArgoProject({
-    baseUrl,
-    argoToken,
-    projectName,
-  }: getArgoProjectProps) {
-    const requestOptions: RequestInit = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${argoToken}`,
-      },
-    };
-
-    const resp = await fetch(
-      `${baseUrl}/api/v1/projects/${projectName}`,
-      requestOptions,
-    );
-
-    if (!resp.ok) {
-      throw new Error(`Request failed with ${resp.status} Error`);
-    }
-
-    const data: GetArgoProjectResp = await resp?.json();
-    return data;
   }
 }

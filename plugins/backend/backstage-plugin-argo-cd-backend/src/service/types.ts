@@ -149,6 +149,7 @@ export interface ArgoServiceApi {
   updateArgoProjectAndApp: (
     props: UpdateArgoProjectAndAppProps,
   ) => Promise<boolean>;
+  getArgoProject: (props: GetArgoProjectProps) => Promise<GetArgoProjectResp>;
 }
 
 export type InstanceConfig = {
@@ -178,7 +179,7 @@ export type BuildArgoApplicationArgs = {
   destinationServer?: string;
 };
 
-export type getArgoProjectProps = {
+export type GetArgoProjectProps = {
   baseUrl: string;
   argoToken: string;
   projectName: string;

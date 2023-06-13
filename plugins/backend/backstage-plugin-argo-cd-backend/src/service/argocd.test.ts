@@ -1004,6 +1004,9 @@ describe('ArgoCD service', () => {
       status: {},
       instance: 'instance',
     };
+    const getArgoProjectResp = {
+      metadata: { resourceVersion: 'resourceVersion' },
+    };
     it('should throw error when argo app not found', async () => {
       fetchMock.mockResponseOnce('', { status: 404 }); // getArgoAppData
       await expect(argoService.updateArgoProjectAndApp(data)).rejects.toThrow(
@@ -1019,14 +1022,23 @@ describe('ArgoCD service', () => {
         }),
       ); // getArgoAppData
       await expect(argoService.updateArgoProjectAndApp(data)).rejects.toThrow(
-        'No repo URL found for argo project',
+        'No repo URL found for argo app',
       );
     });
 
-    it('should throw error when resourceVersion undefined', async () => {
+    it('should throw error when app resourceVersion undefined', async () => {
       fetchMock.mockResponseOnce(
         JSON.stringify({ ...getArgoAppDataResp, metadata: {} }),
       ); // getArgoAppData
+      await expect(argoService.updateArgoProjectAndApp(data)).rejects.toThrow(
+        'No resourceVersion found for argo app',
+      );
+    });
+
+    it('should throw error when project resourceVersion undefined', async () => {
+      fetchMock
+        .mockResponseOnce(JSON.stringify(getArgoAppDataResp)) // getArgoAppData
+        .mockResponseOnce(JSON.stringify({ metadata: {} })); // getArgoProject
       await expect(argoService.updateArgoProjectAndApp(data)).rejects.toThrow(
         'No resourceVersion found for argo project',
       );
@@ -1035,6 +1047,7 @@ describe('ArgoCD service', () => {
     it('should throw error when argo project update fails', async () => {
       fetchMock
         .mockResponseOnce(JSON.stringify(getArgoAppDataResp)) // getArgoAppData
+        .mockResponseOnce(JSON.stringify(getArgoProjectResp)) // getArgoProject
         .mockResponseOnce(JSON.stringify({ message: 'ERROR' }), {
           status: 500,
         }); // updateArgoProject
@@ -1047,6 +1060,7 @@ describe('ArgoCD service', () => {
     it('should throw error when argo app update fails', async () => {
       fetchMock
         .mockResponseOnce(JSON.stringify(getArgoAppDataResp)) // getArgoAppData
+        .mockResponseOnce(JSON.stringify(getArgoProjectResp)) // getArgoProject
         .mockResponseOnce(JSON.stringify(getArgoAppDataResp)) // updateArgoProject
         .mockResponseOnce(JSON.stringify({ message: 'ERROR' }), {
           status: 500,
@@ -1060,6 +1074,7 @@ describe('ArgoCD service', () => {
     it('should return true when app and project update succeeds', async () => {
       fetchMock
         .mockResponseOnce(JSON.stringify(getArgoAppDataResp)) // getArgoAppData
+        .mockResponseOnce(JSON.stringify(getArgoProjectResp)) // getArgoProject
         .mockResponseOnce(JSON.stringify(getArgoAppDataResp)) // updateArgoProject
         .mockResponseOnce(JSON.stringify(getArgoAppDataResp)); // updateArgoApp
 
@@ -1071,8 +1086,10 @@ describe('ArgoCD service', () => {
     it('should return true when app and project update succeeds and source repo changes', async () => {
       fetchMock
         .mockResponseOnce(JSON.stringify(getArgoAppDataResp)) // getArgoAppData
+        .mockResponseOnce(JSON.stringify(getArgoProjectResp)) // getArgoProject
         .mockResponseOnce(JSON.stringify(getArgoAppDataResp)) // updateArgoProject
         .mockResponseOnce(JSON.stringify(getArgoAppDataResp)) // updateArgoApp
+        .mockResponseOnce(JSON.stringify(getArgoProjectResp)) // getArgoProject
         .mockResponseOnce(JSON.stringify(getArgoAppDataResp)); // updateArgoProject
 
       const newData = { ...data, sourceRepo: 'newRepo' };
@@ -1084,49 +1101,29 @@ describe('ArgoCD service', () => {
   });
 
   describe('getArgoProject', () => {
-    beforeEach(() => {
-      fetchMock.resetMocks();
-    });
+    const projectData = { metadata: { resourceVersion: 'resourceVersion' } };
+    const argoProjectReq = {
+      baseUrl: 'baseUrl',
+      argoToken: 'token',
+      projectName: 'projectName',
+    };
 
-    it('successfully gets project data', async () => {
-      fetchMock.mockResponseOnce(
-        JSON.stringify({
-          metadata: {
-            resourceVersion: 'resourceVersion',
-          },
-        }),
-      );
+    it('should get project data', async () => {
+      fetchMock.mockResponseOnce(JSON.stringify(projectData));
 
-      const resp = await argoService.getArgoProject({
-        baseUrl: 'baseUrl',
-        argoToken: 'token',
-        projectName: 'projectName',
-      });
+      const resp = await argoService.getArgoProject(argoProjectReq);
 
-      expect(resp).toEqual({
-        metadata: {
-          resourceVersion: 'resourceVersion',
-        },
-      });
-      expect(fetchMock).toBeCalledWith('baseUrl/api/v1/projects/projectName', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer token',
-        },
-      });
+      expect(resp).toStrictEqual(projectData);
     });
 
     it('should throw an error when fail to get project', async () => {
-      fetchMock.mockRejectOnce(new Error());
+      fetchMock.mockResponseOnce(JSON.stringify({ message: 'ERROR' }), {
+        status: 500,
+      });
 
-      await expect(
-        argoService.getArgoProject({
-          baseUrl: 'baseUrl',
-          argoToken: 'token',
-          projectName: 'projectName',
-        }),
-      ).rejects.toThrow();
+      await expect(argoService.getArgoProject(argoProjectReq)).rejects.toThrow(
+        'Failed to get argo project: ERROR',
+      );
     });
   });
 });
