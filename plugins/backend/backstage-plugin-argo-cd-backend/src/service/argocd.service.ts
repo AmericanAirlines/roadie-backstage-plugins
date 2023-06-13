@@ -25,6 +25,7 @@ import {
   UpdateArgoApplicationProps,
   UpdateArgoProjectProps,
   getArgoProjectProps,
+  GetArgoProjectResp,
   // UpdateArgoApplicationProps,
 } from './types';
 
@@ -876,7 +877,7 @@ export class ArgoService implements ArgoServiceApi {
       throw new Error(`Request failed with ${resp.status} Error`);
     }
 
-    const data: getRevisionDataResp = await resp?.json();
+    const data: GetArgoProjectResp = await resp?.json();
     return data;
   }
 }

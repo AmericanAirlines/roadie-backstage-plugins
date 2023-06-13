@@ -1084,6 +1084,10 @@ describe('ArgoCD service', () => {
   });
 
   describe('getArgoProject', () => {
+    beforeEach(() => {
+      fetchMock.resetMocks();
+    });
+
     it('successfully gets project data', async () => {
       fetchMock.mockResponseOnce(
         JSON.stringify({
@@ -1092,17 +1096,37 @@ describe('ArgoCD service', () => {
           },
         }),
       );
+
       const resp = await argoService.getArgoProject({
         baseUrl: 'baseUrl',
         argoToken: 'token',
         projectName: 'projectName',
       });
+
       expect(resp).toEqual({
         metadata: {
           resourceVersion: 'resourceVersion',
         },
       });
-      // expect(fetchMock).toBeCalledWith('baseUrl/api/v1/projects/projectName')
+      expect(fetchMock).toBeCalledWith('baseUrl/api/v1/projects/projectName', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer token',
+        },
+      });
+    });
+
+    it('should throw an error when fail to get project', async () => {
+      fetchMock.mockRejectOnce(new Error());
+
+      await expect(
+        argoService.getArgoProject({
+          baseUrl: 'baseUrl',
+          argoToken: 'token',
+          projectName: 'projectName',
+        }),
+      ).rejects.toThrow();
     });
   });
 });
