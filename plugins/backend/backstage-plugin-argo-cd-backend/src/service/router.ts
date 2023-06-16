@@ -198,7 +198,6 @@ export function createRouter({
         kubernetesNamespace: namespace,
       });
     } catch (e: any) {
-      console.log(e);
       return response.status(500).send({
         status: 500,
         message: e.message || 'Failed to create argo app',
