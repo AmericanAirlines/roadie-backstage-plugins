@@ -156,71 +156,6 @@ describe('ArgoCD service', () => {
     ).rejects.toThrow();
   });
 
-  it('should return the argo instances an argo app is on', async () => {
-    fetchMock.mockResponseOnce(
-      JSON.stringify({
-        metadata: {
-          name: 'testApp-nonprod',
-          namespace: 'argocd',
-          status: {},
-        },
-      }),
-    );
-
-    const resp = await argoService.findArgoApp({ name: 'testApp-nonprod' });
-
-    expect(resp).toStrictEqual([
-      {
-        name: 'argoInstance1',
-        url: 'https://argoInstance1.com',
-        appName: ['testApp-nonprod'],
-      },
-    ]);
-  });
-
-  it('should fail to return the argo instances an argo app is on', async () => {
-    fetchMock.mockResponseOnce('', { status: 500 });
-
-    return expect(async () => {
-      await argoServiceForNoToken.findArgoApp({ name: 'testApp' });
-    }).rejects.toThrow();
-  });
-
-  it('should return an empty array even when the request fails', async () => {
-    fetchMock.mockRejectOnce(new Error());
-    expect(await argoService.findArgoApp({ name: 'test-app' })).toStrictEqual(
-      [],
-    );
-  });
-
-  it('should return the argo instances using the app selector', async () => {
-    fetchMock.mockResponseOnce(
-      JSON.stringify({
-        items: [
-          {
-            metadata: {
-              name: 'testApp-nonprod',
-              namespace: 'argocd',
-              status: {},
-            },
-          },
-        ],
-      }),
-    );
-
-    const resp = await argoService.findArgoApp({
-      selector: 'name=testApp-nonprod',
-    });
-
-    expect(resp).toStrictEqual([
-      {
-        appName: ['testApp-nonprod'],
-        name: 'argoInstance1',
-        url: 'https://argoInstance1.com',
-      },
-    ]);
-  });
-
   it('should successfully decorate the items when using the app selector', async () => {
     fetchMock.mockResponseOnce(
       JSON.stringify({
@@ -980,6 +915,73 @@ describe('ArgoCD service', () => {
         status: 'failed',
         message: 'Cannot Delete Project: something unexpected',
       },
+    });
+  });
+
+  describe('findArgoApp', () => {
+    it('should return the argo instances an argo app is on', async () => {
+      fetchMock.mockResponseOnce(
+        JSON.stringify({
+          metadata: {
+            name: 'testApp-nonprod',
+            namespace: 'argocd',
+            status: {},
+          },
+        }),
+      );
+
+      const resp = await argoService.findArgoApp({ name: 'testApp-nonprod' });
+
+      expect(resp).toStrictEqual([
+        {
+          name: 'argoInstance1',
+          url: 'https://argoInstance1.com',
+          appName: ['testApp-nonprod'],
+        },
+      ]);
+    });
+
+    it('should fail to return the argo instances an argo app is on', async () => {
+      fetchMock.mockResponseOnce('', { status: 500 });
+
+      return expect(async () => {
+        await argoServiceForNoToken.findArgoApp({ name: 'testApp' });
+      }).rejects.toThrow();
+    });
+
+    it('should return an empty array even when the request fails', async () => {
+      fetchMock.mockRejectOnce(new Error());
+      expect(await argoService.findArgoApp({ name: 'test-app' })).toStrictEqual(
+        [],
+      );
+    });
+
+    it('should return the argo instances using the app selector', async () => {
+      fetchMock.mockResponseOnce(
+        JSON.stringify({
+          items: [
+            {
+              metadata: {
+                name: 'testApp-nonprod',
+                namespace: 'argocd',
+                status: {},
+              },
+            },
+          ],
+        }),
+      );
+
+      const resp = await argoService.findArgoApp({
+        selector: 'name=testApp-nonprod',
+      });
+
+      expect(resp).toStrictEqual([
+        {
+          appName: ['testApp-nonprod'],
+          name: 'argoInstance1',
+          url: 'https://argoInstance1.com',
+        },
+      ]);
     });
   });
 });
