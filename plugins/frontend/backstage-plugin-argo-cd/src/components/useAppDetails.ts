@@ -42,6 +42,10 @@ export const useAppDetails = ({
     const promises: Promise<void>[] | undefined =
       appDetails.status?.history?.map(async (historyRecord: any) => {
         const revisionID = historyRecord.revision;
+        if (historyRecord.source?.chart !== undefined) {
+          historyRecord.revision = { revisionID: revisionID };
+          return;
+        }
         const revisionDetails = await api.getRevisionDetails({
           url,
           app,
@@ -139,8 +143,9 @@ export const useAppDetails = ({
             return newItem;
           },
         );
-        const result = await Promise.all(getRevisionHistroyPromises);
-        return result;
+        return Promise.all(getRevisionHistroyPromises).then(result =>
+          result.filter(n => n),
+        );
       }
       if (appSelector || projectName) {
         const result = await api.listApps({ url, appSelector, projectName });
@@ -157,7 +162,9 @@ export const useAppDetails = ({
               return newItem;
             },
           );
-          return await Promise.all(getRevisionHistroyPromises);
+          return Promise.all(getRevisionHistroyPromises).then(output =>
+            output.filter(n => n),
+          );
         }
         return result;
       }

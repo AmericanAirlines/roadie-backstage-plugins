@@ -1,5 +1,29 @@
 # @roadiehq/backstage-plugin-github-insights
 
+## 2.3.17
+
+### Patch Changes
+
+- 4abae0b2: Fix issue where .environment may be not available
+
+## 2.3.16
+
+### Patch Changes
+
+- 05c0c417: Update deps to backstage 1.16.0 version
+
+## 2.3.15
+
+### Patch Changes
+
+- edf2f0ab: Update dependencies to backstage version 1.15.0
+
+## 2.3.14
+
+### Patch Changes
+
+- 608e1061: Release all
+
 ## 2.3.13
 
 ### Patch Changes

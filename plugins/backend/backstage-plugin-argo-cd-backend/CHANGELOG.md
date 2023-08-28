@@ -1,5 +1,47 @@
 # @roadiehq/backstage-plugin-argo-cd-backend
 
+## 2.11.0
+
+### Minor Changes
+
+- 0c7d7136: Updates the error thrown in argoCreateApplication to include the error message from argo api response.
+
+## 2.10.0
+
+### Minor Changes
+
+- d52d82ec: Add endpoint that grabs all argo projects and another endpoint that checks if app already exists in a given cluster with the same repo and source
+
+## 2.9.0
+
+### Minor Changes
+
+- 23ca55f3: Adding FailOnSharedResource=true to syncOptions when an argo app is created to prevent dueling argo applications
+
+## 2.8.2
+
+### Patch Changes
+
+- 05c0c417: Update deps to backstage 1.16.0 version
+
+## 2.8.1
+
+### Patch Changes
+
+- edf2f0ab: Update dependencies to backstage version 1.15.0
+
+## 2.8.0
+
+### Minor Changes
+
+- 18f8a82f: add updateArgoApp endpoint to change source repo, path, and label values
+
+## 2.7.8
+
+### Patch Changes
+
+- 608e1061: Release all
+
 ## 2.7.7
 
 ### Patch Changes

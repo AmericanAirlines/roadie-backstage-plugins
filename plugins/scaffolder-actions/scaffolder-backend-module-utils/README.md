@@ -14,6 +14,7 @@ This contains a collection of actions to use in scaffolder templates:
 - [Merge new data into an existing JSON file](#merge-json)
 - [Append content to a file](#append)
 - [Write content to a file](#write-to-file)
+- [Replace in files](#replace-in-files)
 
 ## Setup
 
@@ -71,6 +72,7 @@ const actions = [
   createJSONataAction(),
   createYamlJSONataTransformAction(),
   createJsonJSONataTransformAction(),
+  createReplaceInFileAction(),
   ...createBuiltinActions({
     containerRunner,
     integrations,
@@ -343,7 +345,7 @@ spec:
             - item1
         expression: '$ ~> | $ | { "items": [items, "item2"] }|'
   output:
-    result: ${{ steps.serialize.output.result }}
+    result: ${{ steps.jsonata.output.result }}
 ```
 
 Transform a JSON file:
@@ -369,7 +371,7 @@ spec:
         path: input-data.jaon
         expression: '$ ~> | $ | { "items": [items, "item2"] }|'
   output:
-    result: ${{ steps.serialize.output.result }}
+    result: ${{ steps.jsonata.output.result }}
 ```
 
 Transform a YAML file:
@@ -395,7 +397,7 @@ spec:
         path: input-data.yaml
         expression: '$ ~> | $ | { "items": [items, "item2"] }|'
   output:
-    result: ${{ steps.serialize.output.result }}
+    result: ${{ steps.jsonata.output.result }}
 ```
 
 ### Merge JSON
@@ -708,4 +710,35 @@ spec:
       action: debug:log
       input:
         message: 'RemoteURL: ${{ steps["publish-pr"].output.remoteUrl }}'
+```
+
+### Replace in files
+
+**Action name:** `roadiehq:utils:fs:replace`
+
+This action replaces found string in files with content defined in input.
+
+**Required params:**
+
+- files: Collection of files and their replacing configuration. See structure of collection item below.
+- files[].file: Path to the file to be modified
+- files[].find: A text to be replaced
+- files[].replaceWith: A text to be used to replace above
+
+```yaml
+---
+parameters:
+  templated_text:
+    title: Replacer
+    type: string
+    description: Text you want to use to replace i_want_to_replace_this
+steps:
+  - id: Replace text in file
+    name: Replace
+    action: roadiehq:utils:fs:replace
+    input:
+      files:
+        - file: './file.1'
+          find: 'i_want_to_replace_this'
+          replaceWith: ${{ parameters.templated_text }}
 ```
