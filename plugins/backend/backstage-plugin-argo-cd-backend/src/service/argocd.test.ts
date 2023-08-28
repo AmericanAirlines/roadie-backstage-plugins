@@ -8,9 +8,14 @@ import {
 import fetchMock from 'jest-fetch-mock';
 import { timer } from './timer.services';
 import { mocked } from 'ts-jest/utils';
+import { Logger } from 'winston';
 
 fetchMock.enableMocks();
 jest.mock('./timer.services');
+const loggerMock = {
+  error: jest.fn(),
+  info: jest.fn(),
+} as unknown as Logger;
 
 const config = ConfigReader.fromConfigs([
   {
@@ -66,19 +71,20 @@ describe('ArgoCD service', () => {
     'testusername',
     'testpassword',
     config,
-    getVoidLogger(),
+    loggerMock,
   );
 
   const argoServiceForNoToken = new ArgoService(
     'testusername',
     'testpassword',
     configWithoutToken,
-    getVoidLogger(),
+    loggerMock,
   );
 
   beforeEach(() => {
     mocked(timer).mockResolvedValue(0);
     fetchMock.resetMocks();
+    jest.clearAllMocks();
   });
 
   it('should get revision data', async () => {
@@ -621,7 +627,7 @@ describe('ArgoCD service', () => {
     ]);
   });
 
-  it('should fail to sync all apps when bad token', async () => {
+  it('should return empty array when bad token', async () => {
     // token
     fetchMock.mockOnceIf(
       /.*\/api\/v1\/session/g,
@@ -631,13 +637,11 @@ describe('ArgoCD service', () => {
       { status: 401, statusText: 'Unauthorized' },
     );
 
-    const resp = argoServiceForNoToken.resyncAppOnAllArgos({
+    const resp = await argoServiceForNoToken.resyncAppOnAllArgos({
       appSelector: 'testApp',
     });
 
-    await expect(resp).rejects.toThrow(
-      'Getting unauthorized for Argo CD instance https://argoInstance1.com',
-    );
+    expect(resp).toStrictEqual([]);
   });
 
   it('should fail to sync all apps when bad permissions', async () => {
@@ -941,14 +945,6 @@ describe('ArgoCD service', () => {
       ]);
     });
 
-    it('should fail to return the argo instances an argo app is on', async () => {
-      fetchMock.mockResponseOnce('', { status: 500 });
-
-      return expect(async () => {
-        await argoServiceForNoToken.findArgoApp({ name: 'testApp' });
-      }).rejects.toThrow();
-    });
-
     it('should return an empty array even when the request fails', async () => {
       fetchMock.mockRejectOnce(new Error());
       expect(await argoService.findArgoApp({ name: 'test-app' })).toStrictEqual(
@@ -982,6 +978,28 @@ describe('ArgoCD service', () => {
           url: 'https://argoInstance1.com',
         },
       ]);
+    });
+
+    it('returns empty array when get token call fails', async () => {
+      fetchMock.mockRejectedValueOnce(new Error('FetchError'));
+
+      const resp = await argoServiceForNoToken.findArgoApp({
+        selector: 'name=testApp-nonprod',
+      });
+
+      expect(resp).toStrictEqual([]);
+    });
+
+    it('logs error when token call fails', async () => {
+      fetchMock.mockRejectedValueOnce(new Error('FetchError'));
+
+      await argoServiceForNoToken.findArgoApp({
+        selector: 'name=testApp-nonprod',
+      });
+
+      expect(loggerMock.error).toHaveBeenCalledWith(
+        'Error getting token from Argo Instance argoInstance1: Error: FetchError',
+      );
     });
   });
 });
