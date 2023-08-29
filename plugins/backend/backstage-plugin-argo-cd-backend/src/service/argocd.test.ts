@@ -1047,7 +1047,7 @@ describe('ArgoCD service', () => {
       });
 
       expect(loggerMock.error).toHaveBeenCalledWith(
-        'Error getting token from Argo Instance argoInstance1: Error: FetchError',
+        'Error getting token from Argo Instance argoInstance1: FetchError',
       );
     });
   });
