@@ -1,4 +1,4 @@
-import { InstanceConfig } from '../service/types';
+import { InstanceConfig } from '../types/types';
 
 export const getArgoConfigByInstanceName = ({
   argoConfigs,

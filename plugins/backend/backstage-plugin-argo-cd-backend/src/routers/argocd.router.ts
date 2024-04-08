@@ -3,7 +3,7 @@ import { Config } from '@backstage/config';
 import express from 'express';
 import Router from 'express-promise-router';
 import { Logger } from 'winston';
-import { ArgoService } from './argocd.service';
+import { ArgoService } from '../service/argocd.service';
 import { getArgoConfigByInstanceName } from '../utils/getArgoConfig';
 
 export interface RouterOptions {
@@ -26,7 +26,7 @@ export function createRouter({
   const argoPassword =
     config.getOptionalString('argocd.password') ?? 'argocdPassword';
   const argoSvc = new ArgoService(argoUserName, argoPassword, config, logger);
-
+  // GET  /instances/:instanceID/applications
   router.get('/allArgoApps/:argoInstanceName', async (request, response) => {
     const argoInstanceName = request.params.argoInstanceName;
     const matchedArgoInstance = getArgoConfigByInstanceName({

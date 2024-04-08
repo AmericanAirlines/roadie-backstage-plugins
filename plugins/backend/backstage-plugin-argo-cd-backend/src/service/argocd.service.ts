@@ -1,7 +1,7 @@
 import { Config } from '@backstage/config';
 import fetch from 'cross-fetch';
 import { Logger } from 'winston';
-import { timer } from './timer.services';
+import { timer } from '../utils/timer.services';
 
 import {
   ArgoServiceApi,
@@ -29,7 +29,7 @@ import {
   ArgoProject,
   ResourceItem,
   GetArgoApplicationResp,
-} from './types';
+} from '../types/types';
 import { getArgoConfigByInstanceName } from '../utils/getArgoConfig';
 
 const APP_NAMESPACE_QUERY_PARAM = 'appNamespace';

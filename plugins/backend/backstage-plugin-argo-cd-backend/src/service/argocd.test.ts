@@ -6,9 +6,9 @@ import {
   argocdCreateProjectResp,
 } from './argocdTestResponses';
 import fetchMock from 'jest-fetch-mock';
-import { timer } from './timer.services';
+import { timer } from '../utils/timer.services';
 import { Logger } from 'winston';
-import { ResourceItem, UpdateArgoProjectAndAppProps } from './types';
+import { ResourceItem, UpdateArgoProjectAndAppProps } from '../types/types';
 import { mocked } from 'jest-mock';
 
 fetchMock.enableMocks();
