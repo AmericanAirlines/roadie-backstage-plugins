@@ -25,100 +25,16 @@ export function createRouter({
   const router = Router();
   router.use(express.json());
 
-  const argocdController = new ArgocdController(argoClient);
+  const argocdController = new ArgocdController(argoClient, logger);
   
-  // GET  /instances/:instanceID/applications
-  router.get('/allArgoApps/:argoInstanceName', async (request, response) => {
-    argocdController.getOneArgoApp(request, response)
-  });
+  router.get('/allArgoApps/:argoInstanceName', argocdController.getOneArgoApp);
+
+  router.get('/argoInstance/:argoInstance/repo/:repo/source/:source', argocdController.doesAppExistWithRepoAndSourcePath);
+
+  router.get('/find/name/:argoAppName', argocdController.getArgoAppByName);
 
   router.get(
-    '/argoInstance/:argoInstance/repo/:repo/source/:source',
-    async (request, response) => {
-      const argoInstanceName = request.params.argoInstance;
-      const matchedArgoInstance = getArgoConfigByInstanceName({
-        argoInstanceName,
-        argoConfigs: argoSvc.getArgoInstanceArray(),
-      });
-      if (matchedArgoInstance === undefined) {
-        return response.status(500).send({
-          status: 'failed',
-          message: 'cannot find an argo instance to match this cluster',
-        });
-      }
-      const token: string =
-        matchedArgoInstance.token ??
-        (await argoSvc.getArgoToken(matchedArgoInstance));
-
-      if (!token) {
-        return response.status(500).send({
-          status: 'failed',
-          message: 'could not generate token',
-        });
-      }
-      const argoData = await argoSvc.getArgoAppData(
-        matchedArgoInstance.url,
-        matchedArgoInstance.name,
-        token,
-      );
-      const repoAndSource = argoData.items.map(
-        (argoApp: any) =>
-          `${argoApp?.spec?.source?.repoURL}/${argoApp?.spec?.source?.path}`,
-      );
-      return response.send(
-        repoAndSource.includes(
-          `${request.params.repo}/${decodeURIComponent(request.params.source)}`,
-        ),
-      );
-    },
-  );
-
-  router.get('/find/name/:argoAppName', async (request, response) => {
-    const argoAppName = request.params.argoAppName;
-    const argoAppNamespace = request.query?.appNamespace;
-    response.send(
-      await argoSvc.findArgoApp({
-        name: argoAppName as string,
-        namespace: argoAppNamespace as string,
-      }),
-    );
-  });
-
-  router.get(
-    '/argoInstance/:argoInstanceName/applications/name/:argoAppName/revisions/:revisionID/metadata',
-    async (request, response) => {
-      const revisionID: string = request.params.revisionID;
-      const argoInstanceName: string = request.params.argoInstanceName;
-      const argoAppName = request.params.argoAppName;
-      const argoAppNamespace = request.query?.appNamespace;
-      logger.info(`Getting info on ${argoAppName}`);
-      logger.info(`Getting app ${argoAppName} on ${argoInstanceName}`);
-      const matchedArgoInstance = getArgoConfigByInstanceName({
-        argoInstanceName,
-        argoConfigs: argoSvc.getArgoInstanceArray(),
-      });
-      if (matchedArgoInstance === undefined) {
-        return response.status(500).send({
-          status: 'failed',
-          message: 'cannot find an argo instance to match this cluster',
-        });
-      }
-      const token: string =
-        matchedArgoInstance.token ??
-        (await argoSvc.getArgoToken(matchedArgoInstance));
-
-      const resp = await argoSvc.getRevisionData(
-        matchedArgoInstance.url,
-        {
-          name: argoAppName,
-          namespace: argoAppNamespace as string,
-        },
-        token,
-        revisionID,
-      );
-      return response.send(resp);
-    },
-  );
+    '/argoInstance/:argoInstanceName/applications/name/:argoAppName/revisions/:revisionID/metadata',argocdController.getRevisionData);
 
   router.get(
     '/argoInstance/:argoInstanceName/applications/name/:argoAppName',

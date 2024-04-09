@@ -130,10 +130,19 @@ export interface ArgoServiceApi {
       selector?: string;
       namespace?: string;
     },
-  ) => Promise<object>;
-  createArgoProject: (props: CreateArgoProjectProps) => Promise<object>;
-  createArgoApplication: (props: CreateArgoApplicationProps) => Promise<object>;
+  ) => Promise<Record<string, any>>;
+  createArgoProject: (props: CreateArgoProjectProps) => Promise<Record<string, any>>;
+  createArgoApplication: (props: CreateArgoApplicationProps) => Promise<Record<string, any>>;
   createArgoResources: (props: CreateArgoResourcesProps) => Promise<boolean>;
+  getRevisionData: (
+    baseUrl: string,
+    options: {
+      name: string;
+      namespace?: string;
+    },
+    argoToken: string,
+    revisionID: string,
+  ) => Promise<getRevisionDataResp>;
   deleteProject: (props: DeleteProjectProps) => Promise<boolean>;
   deleteApp: (props: DeleteApplicationProps) => Promise<boolean>;
   deleteAppandProject: (
@@ -146,6 +155,7 @@ export interface ArgoServiceApi {
   findArgoApp: (options: {
     name?: string;
     selector?: string;
+    namespace?: string;
   }) => Promise<findArgoAppResp[]>;
   updateArgoProjectAndApp: (
     props: UpdateArgoProjectAndAppProps,

@@ -14,6 +14,7 @@ export const argocdClientServiceFactory = createServiceFactory({
             config.getOptionalString('argocd.username') ?? 'argocdUsername';
         const argoPassword =
             config.getOptionalString('argocd.password') ?? 'argocdPassword';
+        
         return new ArgoService(argoUserName, argoPassword, config, logger);
     }
 });
