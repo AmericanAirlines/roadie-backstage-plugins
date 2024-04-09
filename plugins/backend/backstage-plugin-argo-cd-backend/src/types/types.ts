@@ -125,9 +125,10 @@ export interface ArgoServiceApi {
     baseUrl: string,
     argoInstanceName: string,
     argoToken: string,
-    options: {
-      name: string;
-      selector: string;
+    options?: {
+      name?: string;
+      selector?: string;
+      namespace?: string;
     },
   ) => Promise<object>;
   createArgoProject: (props: CreateArgoProjectProps) => Promise<object>;

@@ -1,15 +1,17 @@
-import { ArgoService } from "../service/argocd.service";
+import { Request, Response } from 'express';
+import { ArgoServiceApi } from "../types/types";
+import { getArgoConfigByInstanceName } from '../utils/getArgoConfig';
 
 
 
-class ArgoServiceController {
-    constructor(private argoService: ArgoService) {}
+export class ArgocdController {
+  constructor(private argocdclient: ArgoServiceApi) {}
 
-    getOneArgoApp = async (request, response) => {
+    getOneArgoApp = async (request: Request, response: Response) => {
         const argoInstanceName = request.params.argoInstanceName;
         const matchedArgoInstance = getArgoConfigByInstanceName({
           argoInstanceName,
-          argoConfigs: argoSvc.getArgoInstanceArray(),
+          argoConfigs: this.argocdclient.getArgoInstanceArray(),
         });
     
         if (matchedArgoInstance === undefined) {
@@ -20,7 +22,7 @@ class ArgoServiceController {
         }
         const token: string =
           matchedArgoInstance.token ??
-          (await argoSvc.getArgoToken(matchedArgoInstance));
+          (await this.argocdclient.getArgoToken(matchedArgoInstance));
     
         if (!token) {
           return response.status(500).send({
@@ -29,7 +31,7 @@ class ArgoServiceController {
           });
         }
         return response.send(
-          await argoSvc.getArgoAppData(
+          await this.argocdclient.getArgoAppData(
             matchedArgoInstance.url,
             matchedArgoInstance.name,
             token,
@@ -37,36 +39,3 @@ class ArgoServiceController {
         );
       }
 }
-
-
-// const handler1 = (argoSvc: ArgoService) => async (request, response) => {
-//     const argoInstanceName = request.params.argoInstanceName;
-//     const matchedArgoInstance = getArgoConfigByInstanceName({
-//       argoInstanceName,
-//       argoConfigs: argoSvc.getArgoInstanceArray(),
-//     });
-
-//     if (matchedArgoInstance === undefined) {
-//       return response.status(500).send({
-//         status: 'failed',
-//         message: 'cannot find an argo instance to match this cluster',
-//       });
-//     }
-//     const token: string =
-//       matchedArgoInstance.token ??
-//       (await argoSvc.getArgoToken(matchedArgoInstance));
-
-//     if (!token) {
-//       return response.status(500).send({
-//         status: 'failed',
-//         message: 'could not generate token',
-//       });
-//     }
-//     return response.send(
-//       await argoSvc.getArgoAppData(
-//         matchedArgoInstance.url,
-//         matchedArgoInstance.name,
-//         token,
-//       ),
-//     );
-//   });

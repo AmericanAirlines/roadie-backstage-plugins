@@ -3,60 +3,33 @@ import { Config } from '@backstage/config';
 import express from 'express';
 import Router from 'express-promise-router';
 import { Logger } from 'winston';
-import { ArgoService } from '../service/argocd.service';
-import { getArgoConfigByInstanceName } from '../utils/getArgoConfig';
+import { ArgoService } from '../../service/argocd.service';
+import { getArgoConfigByInstanceName } from '../../utils/getArgoConfig';
+import { ArgocdController } from '../../controllers/argocd.controller'
+import { ArgoServiceApi } from '../../types/types';
 
 export interface RouterOptions {
   logger: Logger;
-  config: Config;
+  argoClient: ArgoServiceApi;
 }
+
 export type Response = {
   status: string;
   message: string;
 };
+
 export function createRouter({
   logger,
-  config,
+  argoClient
 }: RouterOptions): Promise<express.Router> {
   const router = Router();
   router.use(express.json());
 
-  const argoUserName =
-    config.getOptionalString('argocd.username') ?? 'argocdUsername';
-  const argoPassword =
-    config.getOptionalString('argocd.password') ?? 'argocdPassword';
-  const argoSvc = new ArgoService(argoUserName, argoPassword, config, logger);
+  const argocdController = new ArgocdController(argoClient);
+  
   // GET  /instances/:instanceID/applications
   router.get('/allArgoApps/:argoInstanceName', async (request, response) => {
-    const argoInstanceName = request.params.argoInstanceName;
-    const matchedArgoInstance = getArgoConfigByInstanceName({
-      argoInstanceName,
-      argoConfigs: argoSvc.getArgoInstanceArray(),
-    });
-
-    if (matchedArgoInstance === undefined) {
-      return response.status(500).send({
-        status: 'failed',
-        message: 'cannot find an argo instance to match this cluster',
-      });
-    }
-    const token: string =
-      matchedArgoInstance.token ??
-      (await argoSvc.getArgoToken(matchedArgoInstance));
-
-    if (!token) {
-      return response.status(500).send({
-        status: 'failed',
-        message: 'could not generate token',
-      });
-    }
-    return response.send(
-      await argoSvc.getArgoAppData(
-        matchedArgoInstance.url,
-        matchedArgoInstance.name,
-        token,
-      ),
-    );
+    argocdController.getOneArgoApp(request, response)
   });
 
   router.get(

@@ -1,10 +1,10 @@
-import { createRouter } from './router';
+import { createRouter } from './argocd.router';
 import express, { Express } from 'express';
 import { ConfigReader } from '@backstage/config';
 import request from 'supertest';
 import { getVoidLogger } from '@backstage/backend-common';
 import fetchMock from 'jest-fetch-mock';
-import { timer } from './timer.services';
+import { timer } from '../../utils/timer.services';
 import { mocked } from 'jest-mock';
 
 const mockDeleteApp = jest.fn();

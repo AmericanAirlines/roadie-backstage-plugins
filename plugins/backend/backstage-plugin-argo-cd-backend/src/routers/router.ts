@@ -25,7 +25,7 @@ export function createRouter({
   const argoPassword =
     config.getOptionalString('argocd.password') ?? 'argocdPassword';
   const argoSvc = new ArgoService(argoUserName, argoPassword, config, logger);
-  const Controller = new Controller(argoSvc)
+  // const Controller = new Controller(argoSvc)
 
   router.get('/allArgoApps/:argoInstanceName', async (request, response) => {
     const argoInstanceName = request.params.argoInstanceName;

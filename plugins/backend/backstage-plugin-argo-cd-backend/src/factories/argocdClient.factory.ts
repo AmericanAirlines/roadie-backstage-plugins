@@ -1,10 +1,10 @@
 import { coreServices, createServiceFactory } from '@backstage/backend-plugin-api';
 import { ArgoService } from '../service/argocd.service';
-import { argocdServiceRef } from '../refs/argocdService.ref';
+import { argocdClientServiceRef } from '../refs/argocdClient.ref';
 
 
-export const argocdServiceFactory = createServiceFactory({
-    service: argocdServiceRef,
+export const argocdClientServiceFactory = createServiceFactory({
+    service: argocdClientServiceRef,
     deps: {
         logger: coreServices.logger,
         config: coreServices.rootConfig
