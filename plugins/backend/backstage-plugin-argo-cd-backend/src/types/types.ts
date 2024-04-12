@@ -65,7 +65,8 @@ export interface CreateArgoResourcesProps {
 }
 
 export interface UpdateArgoProjectAndAppProps {
-  instanceConfig: InstanceConfig;
+  instanceUrl: string;
+  instanceName: string;
   argoToken: string;
   appName: string;
   projectName: string;
@@ -91,6 +92,8 @@ export interface DeleteApplicationProps {
 export interface DeleteApplicationAndProjectProps {
   argoAppName: string;
   argoInstanceName: string;
+  argoInstanceUrl: string;
+  argoInstanceToken: string;
 }
 
 export type DeleteApplicationAndProjectResponse = {
@@ -131,8 +134,12 @@ export interface ArgoServiceApi {
       namespace?: string;
     },
   ) => Promise<Record<string, any>>;
-  createArgoProject: (props: CreateArgoProjectProps) => Promise<Record<string, any>>;
-  createArgoApplication: (props: CreateArgoApplicationProps) => Promise<Record<string, any>>;
+  createArgoProject: (
+    props: CreateArgoProjectProps,
+  ) => Promise<Record<string, any>>;
+  createArgoApplication: (
+    props: CreateArgoApplicationProps,
+  ) => Promise<Record<string, any>>;
   createArgoResources: (props: CreateArgoResourcesProps) => Promise<boolean>;
   getRevisionData: (
     baseUrl: string,
@@ -161,6 +168,23 @@ export interface ArgoServiceApi {
     props: UpdateArgoProjectAndAppProps,
   ) => Promise<boolean>;
   getArgoProject: (props: GetArgoProjectProps) => Promise<GetArgoProjectResp>;
+  getArgoApplicationInfo: (props: {
+    argoApplicationName: string;
+    argoInstanceName: string;
+    argoInstanceUrl: string;
+    argoInstanceToken: string;
+  }) => Promise<
+    | {
+        statusCode: 401 | 404 | 200;
+        message: string;
+        error: string;
+        code: number;
+      }
+    | {
+        statusCode: 401 | 404 | 200;
+        metadata: Metadata;
+      }
+  >;
 }
 
 export type InstanceConfig = {

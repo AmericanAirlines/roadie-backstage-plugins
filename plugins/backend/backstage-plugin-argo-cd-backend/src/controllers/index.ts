@@ -1,1 +1,1 @@
-export { ArgocdController } from './argocd.controller'
+export { ArgocdController } from './argocd.controller';

@@ -1,1 +1,1 @@
-export { argocdClientServiceFactory } from './argocdClient.factory'
+export { argocdClientServiceFactory } from './argocdClient.factory';

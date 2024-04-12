@@ -12,7 +12,7 @@ import { ResourceItem, UpdateArgoProjectAndAppProps } from '../types/types';
 import { mocked } from 'jest-mock';
 
 fetchMock.enableMocks();
-jest.mock('./timer.services', () => ({
+jest.mock('./../utils/timer.services', () => ({
   timer: jest.fn(),
 }));
 const loggerMock = {

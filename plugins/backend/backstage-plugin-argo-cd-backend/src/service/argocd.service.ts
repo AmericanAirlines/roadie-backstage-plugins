@@ -678,6 +678,8 @@ export class ArgoService implements ArgoServiceApi {
   async deleteAppandProject({
     argoAppName,
     argoInstanceName,
+    argoInstanceUrl,
+    argoInstanceToken
   }: DeleteApplicationAndProjectProps): Promise<DeleteApplicationAndProjectResponse> {
     const argoDeleteAppResp: ResponseSchema = {
       status: '',
@@ -687,31 +689,13 @@ export class ArgoService implements ArgoServiceApi {
       status: '',
       message: '',
     };
-
-    const matchedArgoInstance = this.instanceConfigs.find(
-      argoInstance => argoInstance.name === argoInstanceName,
-    );
-    if (matchedArgoInstance === undefined) {
-      argoDeleteAppResp.status = 'failed';
-      argoDeleteAppResp.message =
-        'cannot find an argo instance to match this cluster';
-      throw new Error('cannot find an argo instance to match this cluster');
-    }
-
-    let token: string;
-    if (!matchedArgoInstance.token) {
-      token = await this.getArgoToken(matchedArgoInstance);
-    } else {
-      token = matchedArgoInstance.token;
-    }
-
     let countinueToDeleteProject: boolean = true;
     let isAppExist: boolean = true;
     try {
       const deleteAppResp = await this.deleteApp({
-        baseUrl: matchedArgoInstance.url,
+        baseUrl: argoInstanceUrl,
         argoApplicationName: argoAppName,
-        argoToken: token,
+        argoToken: argoInstanceToken,
       });
       if (deleteAppResp === false) {
         countinueToDeleteProject = false;
@@ -739,9 +723,9 @@ export class ArgoService implements ArgoServiceApi {
       ) {
         try {
           const argoApp = await this.getArgoAppData(
-            matchedArgoInstance.url,
-            matchedArgoInstance.name,
-            token,
+            argoInstanceUrl,
+            argoInstanceName,
+            argoInstanceToken,
             { name: argoAppName },
           );
 
@@ -778,9 +762,9 @@ export class ArgoService implements ArgoServiceApi {
           'skipping project deletion due to app deletion pending';
       } else if (countinueToDeleteProject) {
         await this.deleteProject({
-          baseUrl: matchedArgoInstance.url,
+          baseUrl: argoInstanceUrl,
           argoProjectName: argoAppName,
-          argoToken: token,
+          argoToken: argoInstanceToken,
         });
         argoDeleteProjectResp.status = 'success';
         argoDeleteProjectResp.message = 'project is deleted successfully';
@@ -853,7 +837,8 @@ export class ArgoService implements ArgoServiceApi {
   }
 
   async updateArgoProjectAndApp({
-    instanceConfig,
+    instanceUrl,
+    instanceName,
     argoToken,
     appName,
     projectName,
@@ -864,8 +849,8 @@ export class ArgoService implements ArgoServiceApi {
     destinationServer,
   }: UpdateArgoProjectAndAppProps): Promise<boolean> {
     const appData = await this.getArgoAppData(
-      instanceConfig.url,
-      instanceConfig.name,
+      instanceUrl,
+      instanceName,
       argoToken,
       { name: appName },
     );
@@ -878,7 +863,7 @@ export class ArgoService implements ArgoServiceApi {
       throw new Error('No resourceVersion found for argo app');
     }
     const projData = await this.getArgoProject({
-      baseUrl: instanceConfig.url,
+      baseUrl: instanceUrl,
       argoToken,
       projectName,
     });
@@ -891,7 +876,7 @@ export class ArgoService implements ArgoServiceApi {
     if (appData.spec?.source?.repoURL === sourceRepo) {
       await this.updateArgoProject({
         argoToken,
-        baseUrl: instanceConfig.url,
+        baseUrl: instanceUrl,
         namespace,
         projectName,
         sourceRepo,
@@ -901,7 +886,7 @@ export class ArgoService implements ArgoServiceApi {
       await this.updateArgoApp({
         appName,
         argoToken,
-        baseUrl: instanceConfig.url,
+        baseUrl: instanceUrl,
         labelValue,
         namespace,
         projectName,
@@ -914,7 +899,7 @@ export class ArgoService implements ArgoServiceApi {
     }
     await this.updateArgoProject({
       argoToken,
-      baseUrl: instanceConfig.url,
+      baseUrl: instanceUrl,
       namespace,
       projectName,
       sourceRepo: [sourceRepo, appData.spec.source.repoURL],
@@ -924,7 +909,7 @@ export class ArgoService implements ArgoServiceApi {
     await this.updateArgoApp({
       appName,
       argoToken,
-      baseUrl: instanceConfig.url,
+      baseUrl: instanceUrl,
       labelValue,
       namespace,
       projectName,
@@ -934,13 +919,13 @@ export class ArgoService implements ArgoServiceApi {
       destinationServer,
     });
     const updatedProjData = await this.getArgoProject({
-      baseUrl: instanceConfig.url,
+      baseUrl: instanceUrl,
       argoToken,
       projectName,
     });
     await this.updateArgoProject({
       argoToken,
-      baseUrl: instanceConfig.url,
+      baseUrl: instanceUrl,
       namespace,
       projectName,
       sourceRepo,

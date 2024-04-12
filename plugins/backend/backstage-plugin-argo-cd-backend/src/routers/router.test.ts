@@ -17,7 +17,7 @@ const mockDeleteAppandProject = jest.fn();
 const mockGetArgoInstanceArray = jest.fn();
 const mockUpdateArgoProjectAndApp = jest.fn();
 const mockGetArgoApplicationInfo = jest.fn();
-jest.mock('./argocd.service', () => {
+jest.mock('./../service/argocd.service', () => {
   return {
     ArgoService: jest.fn().mockImplementation(() => {
       return {
@@ -35,7 +35,7 @@ jest.mock('./argocd.service', () => {
     }),
   };
 });
-jest.mock('./timer.services');
+jest.mock('./../utils/timer.services');
 
 const logger = getVoidLogger();
 const config = ConfigReader.fromConfigs([

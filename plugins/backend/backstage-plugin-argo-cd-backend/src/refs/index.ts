@@ -1,1 +1,1 @@
-export { argocdClientServiceRef } from './argocdClient.ref'
+export { argocdClientServiceRef } from './argocdClient.ref';
