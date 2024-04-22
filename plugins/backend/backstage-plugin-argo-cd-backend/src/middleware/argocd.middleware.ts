@@ -40,7 +40,7 @@ export const authenticateOneInstance = (argocdClient: ArgoServiceApi) => {
         token =
           matchedArgoInstance.token ??
           (await argocdClient.getArgoToken(matchedArgoInstance));
-        
+
         if (!token) throw new Error('No argo token found') // May not be needed
 
         request.instance = {
@@ -53,13 +53,13 @@ export const authenticateOneInstance = (argocdClient: ArgoServiceApi) => {
       } catch (e) {
         return response.status(401).send({
           status: 'failed',
-          message: `failed to get token for argo instance ${argoInstanceName}: ${e.message}`,
+          message: `failed to get token for argo instance ${argoInstanceName}: ${(e as Error).message }`,
         });
       }
     } catch (e) {
       return response.status(401).send({
         status: 'failed',
-        message: `failed trying to authenticate to make an argo request: ${e.message}`,
+        message: `failed trying to authenticate to make an argo request: ${(e as Error).message}`,
       });
     }
 
